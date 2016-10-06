@@ -2,13 +2,14 @@
 
 var nuRepository = ['$injector', '$q', '$state', '$stateParams',
     function ($injector,   $q,   $state,   $stateParams) {
-        function nuRepository(ResourceName) {
+        function nuRepository(ResourceName, options) {
             var self = this;
+            self.options = options || {};
             self._resource = $injector.get(ResourceName);
             self.isLoading = false;
             self.params = {};
-            self.idKey = 'id';
-            self.viewState = '.view';
+            self.idKey = self.options.idKey || 'id';
+            self.viewState = self.options.viewState || '.view';
 
             self.current_page = 1;
             self.per_page = 15;
@@ -54,7 +55,8 @@ var nuRepository = ['$injector', '$q', '$state', '$stateParams',
             self.search = function (query, extraParams) {
                 var params = angular.extend({}, extraParams);
                 if(query) params.filter = { query: query };
-                return self._resource.search(params).$promise;
+                self.promise = self._resource.search(params).$promise;
+                return self.promise;
             };
 
             self.sanitizedSearch = function (query, extraParams) {
@@ -63,14 +65,15 @@ var nuRepository = ['$injector', '$q', '$state', '$stateParams',
                 self.search(query, extraParams).then(function (data) {
                     defer.resolve(data.data);
                 });
-
+                self.promise = defer.promise;
                 return defer.promise;
             };
 
             self.paginate = function (queryParams) {
                 if(queryParams && queryParams.include)
                     queryParams.include = self.serializeIncludes(queryParams.include);
-                return self._resource.query(queryParams).$promise;
+                self.promise = self._resource.query(queryParams).$promise;
+                return self.promise;
             };
 
             self.get = function (id, includes, extraParams) {
@@ -81,24 +84,28 @@ var nuRepository = ['$injector', '$q', '$state', '$stateParams',
 
                 if (includes) params.include = self.serializeIncludes(includes);
 
-                return self._resource.get(params).$promise;
+                self.promise = self._resource.get(params).$promise;
+                return self.promise;
             };
 
             self.store = function (data, params) {
                 var result = null;
                 if(params) result = self._resource.save(params, data).$promise;
                 else       result = self._resource.save(data).$promise;
+                self.promise = result;
                 return result;
             };
 
             self.update = function (id, data, extraParams) {
                 var params = angular.extend({id: id}, extraParams);
-                return self._resource.update(params, data).$promise;
+                self.promise = self._resource.update(params, data).$promise;
+                return self.promise;
             };
 
             self.delete = function (id, extraParams) {
                 var params = angular.extend({id: id}, extraParams);
-                return self._resource.delete(params).$promise;
+                self.promise = self._resource.delete(params).$promise;
+                return self.promise;
             };
 
             self.serializeIncludes = function (includes) {
