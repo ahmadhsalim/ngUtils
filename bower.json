@@ -23,6 +23,6 @@
     "tests"
   ],
   "dependencies": {
-    "angular-resource": "^1.5.7"
+    "angular-moment": "^0.10.3"
   }
 }
