@@ -24,8 +24,10 @@ var nuRepository = ['$injector', '$q', '$state', '$stateParams',
       source.prototype.getPaginated = function(queryParams) {
         var query = angular.copy(queryParams || {});
         angular.extend(query, source.prototype.params, {
-          per_page: source.prototype.per_page,
-          page: source.prototype.current_page
+          page: {
+            number: source.prototype.current_page,
+            size: source.prototype.per_page
+          }
         });
         source.prototype.promise = source.prototype.paginate(query);
         source.prototype.promise.then(function(response) {
@@ -122,7 +124,7 @@ var nuJsonApiResponseTransformer = [
             if(angular.isUndefined(jsonApiData.included)) return jsonApiData;
 
             var raw = angular.copy(jsonApiData);
-            var sanitized = {};
+            var sanitized = angular.copy(raw);
 
             if(angular.isArray(raw.data)) raw.included = raw.included.concat(raw.data);
             else raw.included.push(raw.data);
