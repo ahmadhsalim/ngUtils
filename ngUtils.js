@@ -4,111 +4,128 @@
 var nuRepository = ['$injector', '$q', '$state', '$stateParams',
   function ($injector,   $q,   $state,   $stateParams) {
     return function (source, ResourceName, options) {
-      source.prototype._resource = $injector.get(ResourceName);
-      source.prototype.ResourceName = ResourceName;
+      var = proto = source.prototype;
+      proto._resource = $injector.get(ResourceName);
+      proto.ResourceName = ResourceName;
 
-      source.prototype.current_page = 1;
-      source.prototype.per_page = 6;
-      source.prototype.include = [];
-      source.prototype.params = {};
-      source.prototype.options = options || {};
-      source.prototype.idKey = source.prototype.options.idKey || 'id';
-      source.prototype.viewState = source.prototype.options.viewState || '.view';
-      source.prototype.updateState = source.prototype.options.updateState || '.update';
-      source.prototype.promise = null;
+      proto.current_page = 1;
+      proto.per_page = 6;
+      proto.include = [];
+      proto.params = {};
+      proto.options = options || {};
+      proto.idKey = proto.options.idKey || 'id';
+      proto.viewState = proto.options.viewState || '.view';
+      proto.updateState = proto.options.updateState || '.update';
+      proto.promise = null;
 
-      source.prototype.setResource = function (ResourceName) {
-        source.prototype._resource = $injector.get(ResourceName);
+      proto.setResource = function (ResourceName) {
+        proto._resource = $injector.get(ResourceName);
       };
 
-      source.prototype.getPaginated = function(queryParams) {
+      proto.getPaginated = function(queryParams) {
         var query = angular.copy(queryParams || {});
-        angular.extend(query, source.prototype.params, {
-          per_page: source.prototype.per_page,
-          page: source.prototype.current_page
+        angular.extend(query, proto.params, {
+          page: {
+            size: proto.per_page,
+            number: proto.current_page
+          }
         });
-        source.prototype.promise = source.prototype.paginate(query);
-        source.prototype.promise.then(function(response) {
-          source.prototype.response = response;
-          source.prototype.response = response;
-          if(response.per_page) source.prototype.per_page = response.per_page;
-          if(response.current_page) source.prototype.current_page = response.current_page;
-          if(response.total) source.prototype.total = response.total;
+        proto.promise = proto.paginate(query);
+        proto.promise.then(function(response) {
+          proto.response = response;
+          if(response.per_page) proto.per_page = response.per_page;
+          if(response.current_page) proto.current_page = response.current_page;
+          if(response.total) proto.total = response.total;
         });
-        return source.prototype.promise;
+        return proto.promise;
       };
 
-      source.prototype.onPaginate = function (page, limit) {
-        source.prototype.current_page = page;
-        source.prototype.per_page = limit;
-        source.prototype.getPaginated();
+      proto.onPaginate = function (page, limit) {
+        proto.current_page = page;
+        proto.per_page = limit;
+        proto.getPaginated();
       };
 
-      source.prototype.viewPage = function(id){
+      proto.viewPage = function(id){
         var viewParams = {};
-        viewParams[source.prototype.idKey] = id;
-        $state.go(source.prototype.viewState, viewParams);
+        viewParams[proto.idKey] = id;
+        $state.go(proto.viewState, viewParams);
       };
 
-      source.prototype.updatePage = function(id){
+      proto.updatePage = function(id){
         var updateParams = {};
-        $state.go(source.prototype.updateState, updateParams);
+        $state.go(proto.updateState, updateParams);
       };
 
-      source.prototype.paginate = function (queryParams) {
-        source.prototype.isListLoading = true;
-        source.prototype.promise = source.prototype._resource.query(queryParams).$promise;
-        source.prototype.promise.then(function() {
-          source.prototype.isListLoading = false;
+      proto.paginate = function (queryParams) {
+        proto.isListLoading = true;
+        proto.promise = proto._resource.query(queryParams).$promise;
+        proto.promise.then(function() {
+          proto.isListLoading = false;
         });
-        return source.prototype.promise;
+        return proto.promise;
       };
 
-      source.prototype.autocomplete = function (query, queryParams) {
-        source.prototype.isAutoCompleteLoading = true;
+      proto.autocomplete = function (query, queryParams) {
+        proto.isAutoCompleteLoading = true;
 
         var defer = $q.defer();
         var params = angular.extend({q:query}, queryParams);
-        source.prototype.promise = source.prototype.paginate(params);
-        source.prototype.promise.then(function(response) {
+        proto.promise = proto.paginate(params);
+        proto.promise.then(function(response) {
           defer.resolve(response.data);
-          source.prototype.isAutoCompleteLoading = false;
+          proto.isAutoCompleteLoading = false;
         });
         return defer.promise;
       };
 
-      source.prototype.get = function (id, includes, extraParams) {
-        source.prototype.isGetLoading = true;
+      proto.get = function (id, includes, extraParams) {
+        proto.isGetLoading = true;
         
         var params = {
           id: id
         };
         angular.extend(params, extraParams);
 
-        if (includes) params.include = source.prototype.serializeIncludes(includes);
+        if (includes) params.include = proto.serializeIncludes(includes);
 
-        source.prototype.promise = source.prototype._resource.get(params).$promise;
-        source.prototype.promise.then(function() {
-          source.prototype.isGetLoading = false;
+        proto.promise = proto._resource.get(params).$promise;
+        proto.promise.then(function(response) {
+          proto.response = response;
+          proto.isGetLoading = false;
         });
-        return source.prototype.promise;
+        return proto.promise;
+      };
+      proto.update = function (id, data, extraParams) {
+        proto.isUpdateLoading = true;
+        var params    = {};
+        if(id) params = angular.extend({id: id}, extraParams);
+        else params   = extraParams;
+        var result    = proto._resource.update(params, data).$promise;
+        result.then(function(response) {
+          proto.response = response;
+          proto.isUpdateLoading = false;
+        });
+
+        return result;
       };
 
-      source.prototype.store = function (data, params) {
-        source.prototype.isStoreLoading = true;
+      proto.store = function (data, params) {
+        proto.isStoreLoading = true;
 
         var result = null;
-        if(params) result = source.prototype._resource.save(params, data).$promise;
-        else       result = source.prototype._resource.save(data).$promise;
-        source.prototype.promise = result;
-        source.prototype.promise.then(function() {
-          source.prototype.isStoreLoading = false;
+        if(params) result = proto._resource.save(params, data).$promise;
+        else       result = proto._resource.save(data).$promise;
+        proto.promise = result;
+        proto.promise.then(function(response) {
+          proto.response = response;
+          proto.isStoreLoading = false;
         });
         return result;
       };
 
-      source.prototype.load = function (params) {
-          return source.prototype.getPaginated(params);
+      proto.load = function (params) {
+          return proto.getPaginated(params);
       };
 
       return source;
@@ -117,93 +134,94 @@ var nuRepository = ['$injector', '$q', '$state', '$stateParams',
 ];
 
 var nuJsonApiResponseTransformer = [
-    function () {
-        return function (jsonApiData, headers) {
-            if(angular.isUndefined(jsonApiData.included)) return jsonApiData;
+  function () {
+    return function (jsonApiData, headers) {
+      if(angular.isUndefined(jsonApiData.included)) return jsonApiData;
 
-            var raw = angular.copy(jsonApiData);
-            var sanitized = {};
+      var raw = angular.copy(jsonApiData);
+      var sanitized = angular.copy(jsonApiData);
+      sanitized.included = {};
 
-            if(angular.isArray(raw.data)) raw.included = raw.included.concat(raw.data);
-            else raw.included.push(raw.data);
+      if(angular.isArray(raw.data)) raw.included = raw.included.concat(raw.data);
+      else raw.included.push(raw.data);
 
-            raw.included.forEach(function(resource) {
-                if(angular.isUndefined(sanitized[resource.type])) sanitized[resource.type] = {};
-                sanitized[resource.type][resource.id] = resource;
-            });
+      raw.included.forEach(function(resource) {
+        if(angular.isUndefined(sanitized.included[resource.type])) sanitized.included[resource.type] = {};
+        sanitized.included[resource.type][resource.id] = resource;
+      });
 
-            return sanitized;
-        };
-    }
+      return sanitized;
+    };
+  }
 ];
 
 var nuFocuser = ['$timeout', '$parse',
-    function (    $timeout,   $parse) {
-        return {
-            link: function (scope, element, attrs) {
-                var model = $parse(attrs.nuFocuser);
-                scope.$watch(model, function(value) {
-                    if (value === true) {
-                        $timeout(function() {
-                            element[0].focus();
-                        });
-                    }
-                });
-            }
-        };
-    }
+  function (    $timeout,   $parse) {
+    return {
+      link: function (scope, element, attrs) {
+        var model = $parse(attrs.nuFocuser);
+        scope.$watch(model, function(value) {
+          if (value === true) {
+            $timeout(function() {
+              element[0].focus();
+            });
+          }
+        });
+      }
+    };
+  }
 ];
 
 var nuElement = [
-    function () {
-        return {
-            restrict: 'A',
-            scope: {
-                nuElement: '='
-            },
-            link: function (scope, element, attrs) {
-                scope.nuElement = element[0];
-            }
-        }
+  function () {
+    return {
+      restrict: 'A',
+      scope: {
+        nuElement: '='
+      },
+      link: function (scope, element, attrs) {
+        scope.nuElement = element[0];
+      }
     }
+  }
 ];
 
 var nuFromNow = ['$window', function ($window) {
-    return function (dateString) {
-        return $window.moment(new Date(dateString)).fromNow()
-    };
+  return function (dateString) {
+    return $window.moment(new Date(dateString)).fromNow()
+  };
 }];
 
 var nuDateToYears = ['$window', function ($window) {
-    return function (dateString) {
-        var now = $window.moment();
-        var age = $window.moment(dateString);
-        age = now.diff(age, 'months');
-        var years = Math.floor(age / 12);
-        var months = age % 12;
-        years = years == 0 ? "" : years > 1 ? " " + years + " years" : " " + years + " year";
+  return function (dateString) {
+    var now = $window.moment();
+    var age = $window.moment(dateString);
+    age = now.diff(age, 'months');
+    var years = Math.floor(age / 12);
+    var months = age % 12;
+    years = years == 0 ? "" : years > 1 ? " " + years + " years" : " " + years + " year";
 
-        months = months == 0 ? "" : months > 1 ? " " + months + " months" : " " + months + " month";
-        return years + months;
-    };
+    months = months == 0 ? "" : months > 1 ? " " + months + " months" : " " + months + " month";
+    return years + months;
+  };
 }];
 
 var nuCapitalize = [function() {
-    return function(input, all) {
-        var reg = (all) ? /([^\W_]+[^\s-]*) */g : /([^\W_]+[^\s-]*)/;
-        return (!!input) ? input.replace(reg, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();}) : '';
-    }
+  return function(input, all) {
+    var reg = (all) ? /([^\W_]+[^\s-]*) */g : /([^\W_]+[^\s-]*)/;
+    return (!!input) ? input.replace(reg, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();}) : '';
+  }
 }];
 
 angular.module('ngUtils', [])
-    .factory('nuRepository', nuRepository)
-    .factory('nuJsonApiResponseTransformer', nuJsonApiResponseTransformer)
+  .factory('nuRepository', nuRepository)
+  .factory('nuJsonApiResponseTransformer', nuJsonApiResponseTransformer)
 
-    .directive('nuFocuser', nuFocuser)
-    .directive('nuElement', nuElement)
+  .directive('nuFocuser', nuFocuser)
+  .directive('nuElement', nuElement)
 
-    .filter('nuFromNow', nuFromNow)
-    .filter('nuCapitalize', nuCapitalize)
-    .filter('nuDateToYears', nuDateToYears);
+  .filter('nuFromNow', nuFromNow)
+  .filter('nuCapitalize', nuCapitalize)
+  .filter('nuDateToYears', nuDateToYears);
 
 })();
