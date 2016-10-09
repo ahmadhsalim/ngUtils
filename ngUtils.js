@@ -1,123 +1,119 @@
 (function() {
 
+
 var nuRepository = ['$injector', '$q', '$state', '$stateParams',
-    function ($injector,   $q,   $state,   $stateParams) {
-        function nuRepository(ResourceName, options) {
-            var self = this;
-            self.options = options || {};
-            self._resource = $injector.get(ResourceName);
-            self.isLoading = false;
-            self.params = {};
-            self.idKey = self.options.idKey || 'id';
-            self.viewState = self.options.viewState || '.view';
+  function ($injector,   $q,   $state,   $stateParams) {
+    return function (source, ResourceName, options) {
+      source.prototype._resource = $injector.get(ResourceName);
+      source.prototype.ResourceName = ResourceName;
 
-            self.current_page = 1;
-            self.per_page = 15;
-            self.include = [];
-            self.promise = null;
+      source.prototype.current_page = 1;
+      source.prototype.per_page = 6;
+      source.prototype.include = [];
+      source.prototype.params = {};
+      source.prototype.options = options || {};
+      source.prototype.idKey = source.prototype.options.idKey || 'id';
+      source.prototype.viewState = source.prototype.options.viewState || '.view';
+      source.prototype.updateState = source.prototype.options.updateState || '.update';
+      source.prototype.promise = null;
 
-            self.setResource = function (ResourceName) {
-                self._resource = $injector.get(ResourceName);
-            };
+      source.prototype.setResource = function (ResourceName) {
+        source.prototype._resource = $injector.get(ResourceName);
+      };
 
-            self.load = function () {
-                self.getPaginated();
-            };
+      source.prototype.getPaginated = function(queryParams) {
+        var query = angular.copy(queryParams || {});
+        angular.extend(query, source.prototype.params, {
+          per_page: source.prototype.per_page,
+          page: source.prototype.current_page
+        });
+        source.prototype.promise = source.prototype.paginate(query);
+        source.prototype.promise.then(function(response) {
+          source.prototype.response = response;
+          source.prototype.response = response;
+          if(response.per_page) source.prototype.per_page = response.per_page;
+          if(response.current_page) source.prototype.current_page = response.current_page;
+          if(response.total) source.prototype.total = response.total;
+        });
+        return source.prototype.promise;
+      };
 
-            self.getPaginated = function(queryParams) {
-                var query = angular.copy(queryParams || {});
-                angular.extend(query, self.params, {
-                    page: {
-                        size: self.per_page,
-                        number: self.current_page
-                    },
-                    include: self.include
-                });
-                self.promise = self.paginate(query);
-                self.promise.then(function(data) {
-                    self.data = data;
-                    if(data.meta) self.total = data.meta.total;
-                });
-            };
+      source.prototype.onPaginate = function (page, limit) {
+        source.prototype.current_page = page;
+        source.prototype.per_page = limit;
+        source.prototype.getPaginated();
+      };
 
-            self.onPaginate = function (page, limit) {
-                ctrl.current_page = page;
-                ctrl.per_page = limit;
-                self.getPaginated();
-            };
+      source.prototype.viewPage = function(id){
+        var viewParams = {};
+        viewParams[source.prototype.idKey] = id;
+        $state.go(source.prototype.viewState, viewParams);
+      };
 
-            self.view = function(id){
-                var viewParams = {};
-                viewParams[self.idKey] = id;
-                $state.go(self.viewState, viewParams);
-            };
+      source.prototype.updatePage = function(id){
+        var updateParams = {};
+        $state.go(source.prototype.updateState, updateParams);
+      };
 
-            self.search = function (query, extraParams) {
-                var params = angular.extend({}, extraParams);
-                if(query) params.filter = { query: query };
-                self.promise = self._resource.search(params).$promise;
-                return self.promise;
-            };
+      source.prototype.paginate = function (queryParams) {
+        source.prototype.isListLoading = true;
+        source.prototype.promise = source.prototype._resource.query(queryParams).$promise;
+        source.prototype.promise.then(function() {
+          source.prototype.isListLoading = false;
+        });
+        return source.prototype.promise;
+      };
 
-            self.sanitizedSearch = function (query, extraParams) {
-                var defer = $q.defer();
+      source.prototype.autocomplete = function (query, queryParams) {
+        source.prototype.isAutoCompleteLoading = true;
 
-                self.search(query, extraParams).then(function (data) {
-                    defer.resolve(data.data);
-                });
-                self.promise = defer.promise;
-                return defer.promise;
-            };
+        var defer = $q.defer();
+        var params = angular.extend({q:query}, queryParams);
+        source.prototype.promise = source.prototype.paginate(params);
+        source.prototype.promise.then(function(response) {
+          defer.resolve(response.data);
+          source.prototype.isAutoCompleteLoading = false;
+        });
+        return defer.promise;
+      };
 
-            self.paginate = function (queryParams) {
-                if(queryParams && queryParams.include)
-                    queryParams.include = self.serializeIncludes(queryParams.include);
-                self.promise = self._resource.query(queryParams).$promise;
-                return self.promise;
-            };
+      source.prototype.get = function (id, includes, extraParams) {
+        source.prototype.isGetLoading = true;
+        
+        var params = {
+          id: id
+        };
+        angular.extend(params, extraParams);
 
-            self.get = function (id, includes, extraParams) {
-                var params = {
-                    id: id
-                };
-                angular.extend(params, extraParams);
+        if (includes) params.include = source.prototype.serializeIncludes(includes);
 
-                if (includes) params.include = self.serializeIncludes(includes);
+        source.prototype.promise = source.prototype._resource.get(params).$promise;
+        source.prototype.promise.then(function() {
+          source.prototype.isGetLoading = false;
+        });
+        return source.prototype.promise;
+      };
 
-                self.promise = self._resource.get(params).$promise;
-                return self.promise;
-            };
+      source.prototype.store = function (data, params) {
+        source.prototype.isStoreLoading = true;
 
-            self.store = function (data, params) {
-                var result = null;
-                if(params) result = self._resource.save(params, data).$promise;
-                else       result = self._resource.save(data).$promise;
-                self.promise = result;
-                return result;
-            };
+        var result = null;
+        if(params) result = source.prototype._resource.save(params, data).$promise;
+        else       result = source.prototype._resource.save(data).$promise;
+        source.prototype.promise = result;
+        source.prototype.promise.then(function() {
+          source.prototype.isStoreLoading = false;
+        });
+        return result;
+      };
 
-            self.update = function (id, data, extraParams) {
-                var params = angular.extend({id: id}, extraParams);
-                self.promise = self._resource.update(params, data).$promise;
-                return self.promise;
-            };
+      source.prototype.load = function (params) {
+          return source.prototype.getPaginated(params);
+      };
 
-            self.delete = function (id, extraParams) {
-                var params = angular.extend({id: id}, extraParams);
-                self.promise = self._resource.delete(params).$promise;
-                return self.promise;
-            };
-
-            self.serializeIncludes = function (includes) {
-                var result = '';
-                angular.forEach(includes, function (value) {
-                    result += result == '' ? value : ',' + value;
-                });
-                return result;
-            };
-        }
-        return nuRepository;
-    }
+      return source;
+    };
+  }
 ];
 
 var nuJsonApiResponseTransformer = [
