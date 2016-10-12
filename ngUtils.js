@@ -4,7 +4,7 @@
 var nuRepository = ['$injector', '$q', '$state', '$stateParams',
   function ($injector,   $q,   $state,   $stateParams) {
     return function (source, ResourceName, options) {
-      var = proto = source.prototype;
+      var proto = source.prototype;
       proto._resource = $injector.get(ResourceName);
       proto.ResourceName = ResourceName;
 
