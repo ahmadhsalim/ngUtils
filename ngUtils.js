@@ -8,11 +8,11 @@ var nuRepository = ['$injector', '$q', '$state', '$stateParams',
       proto._resource = $injector.get(ResourceName);
       proto.ResourceName = ResourceName;
 
-      proto.current_page = 1;
-      proto.per_page = 6;
       proto.include = [];
       proto.params = {};
       proto.options = options || {};
+      proto.current_page = proto.options.current_page || 1;
+      proto.per_page = proto.options.per_page || 15;
       proto.idKey = proto.options.idKey || 'id';
       proto.viewState = proto.options.viewState || '.view';
       proto.updateState = proto.options.updateState || '.update';
