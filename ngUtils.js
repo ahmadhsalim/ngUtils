@@ -7,8 +7,8 @@ var nuRepository = ['$injector', '$q', '$state', '$stateParams',
       source.prototype._resource = $injector.get(ResourceName);
       source.prototype.ResourceName = ResourceName;
 
-      source.prototype.current_page = 1;
-      source.prototype.per_page = 6;
+      source.prototype.current_page = source.prototype.options.current_page || 1;
+      source.prototype.per_page = source.prototype.options.per_page || 15;
       source.prototype.include = [];
       source.prototype.params = {};
       source.prototype.options = options || {};
