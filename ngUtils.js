@@ -4,21 +4,22 @@
 var nuRepository = ['$injector', '$q', '$state', '$stateParams',
   function ($injector,   $q,   $state,   $stateParams) {
     return function (source, ResourceName, options) {
-      source.prototype._resource = $injector.get(ResourceName);
-      source.prototype.ResourceName = ResourceName;
+      var proto = source.prototype;
+      proto._resource = $injector.get(ResourceName);
+      proto.ResourceName = ResourceName;
 
-      source.prototype.current_page = source.prototype.options.current_page || 1;
-      source.prototype.per_page = source.prototype.options.per_page || 15;
-      source.prototype.include = [];
-      source.prototype.params = {};
-      source.prototype.options = options || {};
-      source.prototype.idKey = source.prototype.options.idKey || 'id';
-      source.prototype.viewState = source.prototype.options.viewState || '.view';
-      source.prototype.updateState = source.prototype.options.updateState || '.update';
-      source.prototype.promise = null;
+      proto.current_page = proto.options.current_page || 1;
+      proto.per_page = proto.options.per_page || 15;
+      proto.include = [];
+      proto.params = {};
+      proto.options = options || {};
+      proto.idKey = proto.options.idKey || 'id';
+      proto.viewState = proto.options.viewState || '.view';
+      proto.updateState = proto.options.updateState || '.update';
+      proto.promise = null;
 
-      source.prototype.setResource = function (ResourceName) {
-        source.prototype._resource = $injector.get(ResourceName);
+      proto.setResource = function (ResourceName) {
+        proto._resource = $injector.get(ResourceName);
       };
 
       proto.getPaginated = function(queryParams) {
