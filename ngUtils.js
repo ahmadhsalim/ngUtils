@@ -10,6 +10,7 @@ var nuRepository = ['$injector', '$q', '$state', '$stateParams',
 
       proto.include = [];
       proto.params = {};
+      proto.queryParams = {};
       proto.options = options || {};
       proto.current_page = proto.options.current_page || 1;
       proto.per_page = proto.options.per_page || 15;
@@ -22,8 +23,8 @@ var nuRepository = ['$injector', '$q', '$state', '$stateParams',
         proto._resource = $injector.get(ResourceName);
       };
 
-      proto.getPaginated = function(queryParams) {
-        var query = angular.copy(queryParams || {});
+      proto.getPaginated = function() {
+        var query = angular.copy(proto.queryParams || {});
         angular.extend(query, proto.params, {
           page: {
             size: proto.per_page,
@@ -125,7 +126,8 @@ var nuRepository = ['$injector', '$q', '$state', '$stateParams',
       };
 
       proto.load = function (params) {
-          return proto.getPaginated(params);
+          proto.queryParams = params;
+          return proto.getPaginated();
       };
 
       return source;
