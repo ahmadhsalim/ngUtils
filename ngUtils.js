@@ -398,7 +398,7 @@ var nuEqualto = function() {
 };
 
 var nuFocuser = ['$timeout', '$parse',
-  function (    $timeout,     $parse) {
+  function (      $timeout,   $parse) {
     return {
       link: function (scope, element, attrs) {
         var model = $parse(attrs.nuFocuser);
@@ -431,11 +431,17 @@ var nuElement = [
 
 var nuPageTitle = ['$rootScope', '$timeout', function ($rootScope, $timeout) {
   return {
+    restrict: 'A',
+    scope:{
+      pageTitle: '@'
+    },
     link: function(scope, element) {
       var listener = function(event, toState, toParams, fromState, fromParams) {
-        var title = $rootScope.appName || 'Title';
-        
-        if (toState.data && toState.data.pageTitle) title = toState.data.pageTitle + ' | ' + $rootScope.appName;
+        $rootScope.appName = scope.pageTitle;
+        var title = scope.pageTitle;
+        var suffix = scope.pageTitle ? ' | ' + title : '';
+
+        if (toState.data && toState.data.pageTitle) title = toState.data.pageTitle + suffix;
         $timeout(function() {
           element.text(title);
         });
