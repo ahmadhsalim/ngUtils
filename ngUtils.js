@@ -683,9 +683,9 @@ var nuIfRoleDirective = [
       link: function ($scope, $element, $attr, ctrl, $transclude) {
         var block, childScope, previousElements;
 
-        var permissions = $attr.nuIfRole.replace(/\s/g, '').split(',');
+        var roles = $attr.nuIfRole.replace(/\s/g, '').split(',');
 
-        if(nuIdentity.hasAnyPermission(permissions)){
+        if(nuIdentity.hasAnyRole(roles)){
           if (!childScope) {
             $transclude(function(clone, newScope) {
               childScope = newScope;
