@@ -719,6 +719,71 @@ var nuIfRoleDirective = [
   }
 ];
 
+var nuDatatableDirective =
+  [       '$state', '$stateParams', '$mdDialog', '$mdToast', '$parse',
+  function($state,   $stateParams,   $mdDialog,   $mdToast,   $parse) {
+    return {
+      restrict: 'E',
+      templateUrl: 'nu.Datatable',
+      transclude: {
+        'toolbar': '?nuDatatableToolbar',
+        'header': '?nuDatatableHeader'
+      },
+      scope: {
+        hideToolbar: '@',
+        create: '@noCreate',
+        table: "=",
+        options: "=",
+        selected: '=',
+        repo: '='
+      },
+      compile: function (el, attr) {
+        if(!attr.selected) el.find('table').removeAttr('md-row-select');
+
+        return function(scope, el, attr) {
+          var defaultOptions = {
+            idKey               : 'id',
+            permissions         : {},
+            targetStates        : { view : '.view',update : '.view.udpate' },
+            limitOptions        : [5, 15, 30]
+          };
+          scope.options = angular.extend(defaultOptions, scope.options || {});
+
+          scope.displayField = function (model, field) {
+            if(field.render) return field.render(model);
+            return model.attributes[field.name];
+          };
+
+          if(angular.isDefined(attr.hideToolbar)) {
+              if(attr.hideToolbar === '') attr.hideToolbar = false;
+              else if(attr.hideToolbar == 'true' || !attr.hideToolbar) attr.hideToolbar = true;
+              else attr.hideToolbar = false;
+          }else attr.hideToolbar = true;
+          if(angular.isDefined(attr.noCreate)) {
+              if(attr.noCreate === '') attr.noCreate = false;
+              else if(attr.noCreate == 'true' || !attr.noCreate) attr.noCreate = false;
+              else attr.noCreate = false;
+          }else attr.noCreate = true;
+
+          scope.viewPage = function(model) {
+            if(scope.options.targetStates.view){
+              var idGetter = $parse(scope.options.idKey);
+              var id = idGetter(model);
+              if(angular.isFunction(scope.options.targetStates.view))
+                scope.options.targetStates.view(model);
+              else
+                scope.repo.viewPage(id);
+            }
+          };
+
+          if(scope.options.targetStates.view) scope.role = 'button';
+        };
+      }
+    };
+  }
+];
+
+
 var nuFromNow = ['$window', function ($window) {
   return function (dateString) {
     return $window.moment(new Date(dateString)).fromNow()
@@ -789,7 +854,48 @@ var run = ['$templateCache', function($templateCache) {
     '<div ng-message="valid">Invalid date!</div>' +
     '<div ng-message="as-unique">Already exist</div>'
   );
+  $templateCache.put('nu.Datatable',
+    '<md-toolbar ng-if="hideToolbar" class="md-table-toolbar" layout="row">' +
+      '<div class="md-toolbar-tools" flex>' +
+        '<h2>' +
+          '<span>{{options.title}}</span>' +
+        '</h2>' +
+        '<span flex></span>' +
+        '<ng-transclude ng-transclude-slot="toolbar"></ng-transclude>' +
+        '<md-button ng-if="create" ui-sref="{{options.targetStates.create}}" class="md-icon-button" aria-label="Create">' +
+          '<md-icon md-svg-src="ic_add_24px.svg"></md-icon>' +
+        '</md-button>' +
+      '</div>' +
+    '</md-toolbar>' +
+    '<ng-transclude class="transclude-header" ng-transclude-slot="header"></ng-transclude>' +
+    '<md-table-container>' +
+      '<table md-table md-progress="repo.promise">' +
+        '<thead md-head>' +
+          '<tr md-row>' +
+            '<th md-column ng-repeat="heading in options.fields">{{heading.display}}</th>' +
+          '</tr>' +
+        '</thead>' +
+        '<tbody md-body ng-if="!repo.isListLoading">' +
+          '<tr md-row role="{{role}}"' +
+            'ng-repeat="model in repo.response.data"' +
+            'ng-click="viewPage(model)">' +
+            '<td md-cell ng-repeat="field in options.fields">{{displayField(model, field)}}</td>' +
+          '</tr>' +
+        '</tbody>' +
+      '</table>' +
+    '</md-table-container>' +
+    '<md-table-pagination' +
+      'ng-if="repo.response.meta.page"' +
+      'md-limit="repo.response.meta.page.size"' +
+      'md-limit-options="options.limitOptions"' +
+      'md-page="repo.response.meta.page.number"' +
+      'md-total="{{repo.response.meta.page[\'total-items\']}}"' +
+      'md-on-paginate="repo.onPaginate"' +
+      'md-page-select>' +
+    '</md-table-pagination>'
+  );
 }];
+
 angular.module('ngUtils', [])
   .run(run)
 
@@ -808,6 +914,7 @@ angular.module('ngUtils', [])
   .directive('nuFormField', nuFormField)
   .directive('nuIfCan', nuIfCanDirective)
   .directive('nuIfRole', nuIfRoleDirective)
+  .directive('nuDatatable', nuDatatableDirective)
 
   .filter('nuFromNow', nuFromNow)
   .filter('nuCapitalize', nuCapitalize)
